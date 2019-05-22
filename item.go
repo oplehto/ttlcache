@@ -8,13 +8,14 @@ import (
 // Item represents a record in the cache map
 type Item struct {
 	sync.RWMutex
-	data    string
+	counter int
 	expires *time.Time
 }
 
 func (item *Item) touch(duration time.Duration) {
 	item.Lock()
 	expiration := time.Now().Add(duration)
+	item.counter++
 	item.expires = &expiration
 	item.Unlock()
 }

@@ -11,18 +11,15 @@ func TestGet(t *testing.T) {
 		items: map[string]*Item{},
 	}
 
-	data, exists := cache.Get("hello")
-	if exists || data != "" {
-		t.Errorf("Expected empty cache to return no data")
+	exists := cache.Get("hello")
+	if exists {
+		t.Errorf("Expected empty cache to not exist")
 	}
 
-	cache.Set("hello", "world")
-	data, exists = cache.Get("hello")
+	cache.Set("hello")
+	exists = cache.Get("hello")
 	if !exists {
-		t.Errorf("Expected cache to return data for `hello`")
-	}
-	if data != "world" {
-		t.Errorf("Expected cache to return `world` for `hello`")
+		t.Errorf("Expected cache to return a positive response")
 	}
 }
 
@@ -32,9 +29,9 @@ func TestExpiration(t *testing.T) {
 		items: map[string]*Item{},
 	}
 
-	cache.Set("x", "1")
-	cache.Set("y", "z")
-	cache.Set("z", "3")
+	cache.Set("x")
+	cache.Set("y")
+	cache.Set("z")
 	cache.startCleanupTimer()
 
 	count := cache.Count()
@@ -45,24 +42,24 @@ func TestExpiration(t *testing.T) {
 	<-time.After(500 * time.Millisecond)
 	cache.mutex.Lock()
 	cache.items["y"].touch(time.Second)
-	item, exists := cache.items["x"]
+	item := cache.items["x"]
 	cache.mutex.Unlock()
-	if !exists || item.data != "1" || item.expired() {
+	if item == nil || item.expired() {
 		t.Errorf("Expected `x` to not have expired after 200ms")
 	}
 
 	<-time.After(time.Second)
 	cache.mutex.RLock()
-	_, exists = cache.items["x"]
-	if exists {
+	item = cache.items["x"]
+	if item != nil {
 		t.Errorf("Expected `x` to have expired")
 	}
-	_, exists = cache.items["z"]
-	if exists {
+	item = cache.items["z"]
+	if item != nil {
 		t.Errorf("Expected `z` to have expired")
 	}
-	_, exists = cache.items["y"]
-	if !exists {
+	item = cache.items["y"]
+	if item == nil {
 		t.Errorf("Expected `y` to not have expired")
 	}
 	cache.mutex.RUnlock()
@@ -74,8 +71,8 @@ func TestExpiration(t *testing.T) {
 
 	<-time.After(600 * time.Millisecond)
 	cache.mutex.RLock()
-	_, exists = cache.items["y"]
-	if exists {
+	item = cache.items["y"]
+	if item != nil {
 		t.Errorf("Expected `y` to have expired")
 	}
 	cache.mutex.RUnlock()

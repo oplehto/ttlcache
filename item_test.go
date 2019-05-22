@@ -6,7 +6,7 @@ import (
 )
 
 func TestExpired(t *testing.T) {
-	item := &Item{data: "blahblah"}
+	item := &Item{}
 	if !item.expired() {
 		t.Errorf("Expected item to be expired by default")
 	}
@@ -25,7 +25,7 @@ func TestExpired(t *testing.T) {
 }
 
 func TestTouch(t *testing.T) {
-	item := &Item{data: "blahblah"}
+	item := &Item{}
 	item.touch(time.Second)
 	if item.expired() {
 		t.Errorf("Expected item to not be expired once touched")
